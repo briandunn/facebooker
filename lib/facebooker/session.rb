@@ -100,11 +100,11 @@ module Facebooker
 
     def login_url(options={})
       options = default_login_url_options.merge(options)
-      "#{Facebooker.login_url_base(@api_key)}#{login_url_optional_parameters(options)}"
+      "#{Facebooker.login_url_base}#{login_url_optional_parameters(options)}"
     end
 
     def install_url(options={})
-      "#{Facebooker.install_url_base(@api_key)}#{install_url_optional_parameters(options)}"
+      "#{Facebooker.install_url_base}#{install_url_optional_parameters(options)}"
     end
 
     # The url to get user to approve extended permissions
@@ -415,6 +415,14 @@ module Facebooker
     end
 
     ##
+    # Deactivate a template bundle with Facebook.
+    # Returns true if a bundle with the specified id is active and owned by this app.
+    # Useful to avoid exceeding the 100 templates/app limit.
+    def deactivate_template_bundle_by_id(template_bundle_id)
+      post("facebook.feed.deactivateTemplateBundleByID", {:template_bundle_id => template_bundle_id.to_s}, false)
+    end
+
+    ##
     # publish a previously rendered template bundle
     # see http://wiki.developers.facebook.com/index.php/Feed.publishUserAction
     #
@@ -562,7 +570,7 @@ module Facebooker
     end
 
     def post(method, params = {}, use_session_key = true, &proc)
-      if batch_request?
+      if batch_request? or Facebooker::Logging.skip_api_logging
         post_without_logging(method, params, use_session_key, &proc)
       else
         Logging.log_fb_api(method, params) do

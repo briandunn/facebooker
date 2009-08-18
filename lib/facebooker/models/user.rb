@@ -104,6 +104,11 @@ module Facebooker
       @friends_hash[cache_key]
     end
 
+    def friend_ids
+      options = {:uid => self.id}
+      @session.post('facebook.friends.get', options, false)
+    end
+
     ###
     # Publish a post into the stream on the user's Wall and News Feed.  This
     # post also appears in the user's friend's streams.  The +publish_stream+
@@ -123,12 +128,16 @@ module Facebooker
     #     :href => 'http://tenderlovemaking.com/'
     #   ])
     def publish_to target, options = {}
+      
+      attachment = options[:attachment]
+      links = options[:action_links]
       @session.post('facebook.stream.publish',
-                    :uid        => self.id,
-                    :target_id  => target.id,
-                    :message    => options[:message],
-                    :attachment => Facebooker.json_encode(options[:attachment]),
-                    :action_links => Facebooker.json_encode(options[:action_links])
+                    { :uid        => self.id,
+                      :target_id  => target.id,
+                      :message    => options[:message],
+                      :attachment => attachment && Facebooker.json_encode(attachment),
+                      :action_links => links && Facebooker.json_encode(links) }, 
+                    false
                    )
     end
     
@@ -176,9 +185,13 @@ module Facebooker
     end
     
     def friends_with_this_app
-      @friends_with_this_app ||= session.post('facebook.friends.getAppUsers').map do |uid|
+      @friends_with_this_app ||= friend_ids_with_this_app.map do |uid|
         User.new(uid, session)
       end
+    end
+
+    def friend_ids_with_this_app
+      @friend_ids_with_this_app ||= session.post('facebook.friends.getAppUsers')
     end
     
     def groups(gids = [])
@@ -361,7 +374,7 @@ module Facebooker
     ##
     # Checks to see if the user has enabled the given extended permission
     def has_permission?(ext_perm) # ext_perm = email, offline_access, status_update, photo_upload, create_listing, create_event, rsvp_event, sms
-      session.post('facebook.users.hasAppPermission',:ext_perm=>ext_perm) == "1"
+      session.post('facebook.users.hasAppPermission', {:ext_perm=>ext_perm, :uid => uid}, false) == "1"
     end    
     
     ##
