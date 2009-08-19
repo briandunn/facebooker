@@ -497,15 +497,21 @@ class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCas
     Facebooker.apply_configuration({
       'api_key'          => '1234567',
       'canvas_page_name' => 'facebook_app_name',
-      'secret_key'       => '7654321' })
+      'secret_key'       => '7654321',
+      'callback_host'    => 'http://test.host'
+    })
   end
 
-  def test_named_route_doesnt_include_canvas_path_when_in_canvas_with_canvas_equals_false
-    assert_equal "http://test.host/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => false)%>").profile
+  def test_named_route_doesnt_include_canvas_path_with_canvas_equals_false
+    silence_warnings do
+      assert_equal "http://test.host/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => false)%>").profile
+    end
   end
 
-  def test_named_route_does_include_canvas_path_when_not_in_canvas_with_canvas_equals_true
-    assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => true)%>").profile
+  def test_named_route_does_include_canvas_path_with_canvas_equals_true
+    silence_warnings do
+      assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => true)%>").profile
+    end
   end
 
 end

@@ -1,3 +1,5 @@
+require 'action_controller/request'
+
 module ::ActionController
   if Rails.version < '2.3'
     class AbstractRequest
@@ -18,6 +20,39 @@ module ::ActionController
       alias :old_relative_url_root :relative_url_root
       def relative_url_root
         Facebooker.path_prefix
+      end
+    end
+  end
+
+  module UrlWriter
+
+    def url_for_with_facebooker(*args)
+      options = args.first.is_a?(Hash) ? args.first : args.last
+      options[:host] = callback_host if options.delete(:canvas) == false
+      url_for_without_facebooker(*args)
+    end
+
+    alias_method_chain :url_for, :facebooker
+
+    private
+
+    def callback_host
+      @callback_host ||= host_with_port(URI.parse(Facebooker.facebooker_config['callback_host']))
+    end
+
+    # from ActionController::Request
+    def host_with_port(uri)
+      "#{ uri.host }#{port_string(uri)}"
+    end
+
+    def port_string(uri)
+       uri.port == standard_port(uri) ? '' : ":#{uri.port}"
+    end
+      
+    def standard_port(uri)
+      case uri.scheme
+        when 'https://' then 443
+        else 80
       end
     end
   end
