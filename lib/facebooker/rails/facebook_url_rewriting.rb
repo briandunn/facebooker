@@ -1,5 +1,3 @@
-require 'action_controller/request'
-
 module ::ActionController
   if Rails.version < '2.3'
     class AbstractRequest
