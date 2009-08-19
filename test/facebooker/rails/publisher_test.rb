@@ -60,6 +60,13 @@ class TestPublisher < Facebooker::Rails::Publisher
     fbml render(:inline=>"<%=module_helper_loaded%>")
   end
 
+  def render_profile( to, f, template_string) 
+    send_as :profile
+    recipients to
+    from f
+    profile render(:inline=>template_string)
+  end
+
 
   def profile_update(to,f)
     send_as :profile
@@ -266,15 +273,13 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     ta=TestPublisher.create_templatized_action(@user)
     assert_equal Facebooker::Feed::TemplatizedAction,ta.class
     assert_equal "Templatized Action Title",ta.title_template
-
   end
-
-
 
   def test_deliver_templatized_action
     @user.expects(:publish_action)
     TestPublisher.deliver_templatized_action(@user)
   end
+
   def test_create_profile_update
     p=TestPublisher.create_profile_update(@user,@user)
     assert_equal Facebooker::Rails::Publisher::Profile,p.class
@@ -282,7 +287,8 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     assert_equal "profile_action",p.profile_action
     assert_equal "mobile_profile",p.mobile_profile
   end
-   def test_create_profile_update_with_profile_main
+
+  def test_create_profile_update_with_profile_main
     p=TestPublisher.create_profile_update_with_profile_main(@user,@user)
     assert_equal Facebooker::Rails::Publisher::Profile,p.class
     assert_equal "profile",p.profile
@@ -290,7 +296,6 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     assert_equal "mobile_profile",p.mobile_profile
     assert_equal "profile_main",p.profile_main
   end
-
 
   def test_deliver_profile
     Facebooker::User.stubs(:new).returns(@user)
@@ -303,7 +308,6 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     @user.expects(:set_profile_fbml).with('profile', 'mobile_profile', 'profile_action','profile_main')
     TestPublisher.deliver_profile_update_with_profile_main(@user,@user)
   end
-
 
   def test_create_ref_update
     p=TestPublisher.create_ref_update(@user)
@@ -442,6 +446,7 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     string_image = TestPublisher.new.image('image.png', 'raw_string')
     assert_equal "{\"src\":\"/images/image.png\", \"href\":\"raw_string\"}",string_image.to_json
   end
+
   def test_action_link
     assert_equal({:text=>"text", :href=>"href"}, TestPublisher.new.action_link("text","href"))
   end
@@ -450,7 +455,6 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
     Facebooker.expects(:facebook_path_prefix).returns("/mike")
     assert_equal({:host=>"apps.facebook.com/mike"},TestPublisher.new.default_url_options)
   end
-
   def test_recipients
     tp=TestPublisher.new
     tp.recipients "a"
@@ -460,6 +464,7 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
   def test_symbol_helper
     assert TestPublisher.new.symbol_helper_loaded
   end
+
   def test_module_helper
     assert TestPublisher.new.module_helper_loaded
   end
@@ -485,4 +490,22 @@ class Facebooker::Rails::Publisher::PublisherTest < Test::Unit::TestCase
       assert_equal "true",notification.fbml
     end
   end
+end
+
+class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCase
+  def setup
+    Facebooker.apply_configuration({
+      'api_key'          => '1234567',
+      'canvas_page_name' => 'facebook_app_name',
+      'secret_key'       => '7654321' })
+  end
+
+  def test_named_route_doesnt_include_canvas_path_when_in_canvas_with_canvas_equals_false
+    assert_equal "http://test.host/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => false)%>").profile
+  end
+
+  def test_named_route_does_include_canvas_path_when_not_in_canvas_with_canvas_equals_true
+    assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => true)%>").profile
+  end
+
 end
