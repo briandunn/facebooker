@@ -11,7 +11,7 @@ module Facebooker
       attr_accessor :message, :time, :status_id
     end
     FIELDS = [:status, :political, :pic_small, :name, :quotes, :is_app_user, :tv, :profile_update_time, :meeting_sex, :hs_info, :timezone, :relationship_status, :hometown_location, :about_me, :wall_count, :significant_other_id, :pic_big, :music, :work_history, :sex, :religion, :notes_count, :activities, :pic_square, :movies, :has_added_app, :education_history, :birthday, :birthday_date, :first_name, :meeting_for, :last_name, :interests, :current_location, :pic, :books, :affiliations, :locale, :profile_url, :proxied_email, :email_hashes, :allowed_restrictions, :pic_with_logo, :pic_big_with_logo, :pic_small_with_logo, :pic_square_with_logo]
-    STANDARD_FIELDS = [:uid, :first_name, :last_name, :name, :timezone, :birthday, :sex, :affiliations, :locale, :profile_url, :pic_square]
+    STANDARD_FIELDS = [:uid, :first_name, :last_name, :name, :timezone, :birthday, :sex, :affiliations, :locale, :profile_url, :proxied_email]
     populating_attr_accessor(*FIELDS)
     attr_reader :affiliations
     populating_hash_settable_accessor :current_location, Location
@@ -63,7 +63,17 @@ module Facebooker
       @events[params.to_s] ||= @session.post('facebook.events.get', {:uid => self.id}.merge(params)).map do |event|
         Event.from_hash(event)
       end
-    end    
+    end
+
+    # Rsvp to an event with the eid and rsvp_status which can be 'attending', 'unsure', or 'declined'.
+    # http://wiki.developers.facebook.com/index.php/Events.rsvp
+    # E.g:
+    #  @user.rsvp_event('100321123', 'attending')
+    #  # => Returns true if all went well
+    def rsvp_event(eid, rsvp_status, options = {})
+      result = @session.post('facebook.events.rsvp', options.merge(:eid => eid, :rsvp_status => rsvp_status))
+      result == '1' ? true : false
+    end
     
     # 
     # Set the list of friends, given an array of User objects.  If the list has been retrieved previously, will not set
