@@ -498,7 +498,7 @@ class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCas
       'api_key'          => '1234567',
       'canvas_page_name' => 'facebook_app_name',
       'secret_key'       => '7654321',
-      'callback_host'    => 'http://test.host'
+      'callback_url'    => 'http://test.host'
     })
   end
 
@@ -516,7 +516,7 @@ class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCas
 
   def test_non_canvas_routes_are_callback_url
     silence_warnings do
-      assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=url_for :controller => 'plain_old_rails' %>").profile
+      assert_equal "http://apps.facebook.com/facebook_app_name/", TestPublisher.create_render_profile(12451752,@user,"<%=url_for :controller => 'plain_old_rails' %>").profile
     end
   end
 

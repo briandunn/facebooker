@@ -36,7 +36,7 @@ module ::ActionController
     private
 
     def callback_host
-      @callback_host ||= host_with_port(URI.parse(Facebooker.facebooker_config['callback_host']))
+      @callback_host ||= host_with_port(URI.parse(Facebooker.facebooker_config['callback_url']))
     end
 
     # from ActionController::Request
