@@ -502,7 +502,7 @@ class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCas
     })
   end
 
-  def test_named_route_doesnt_include_canvas_path_with_canvas_equals_false
+  def test_named_route_is_callback_url_with_canvas_equals_false
     silence_warnings do
       assert_equal "http://test.host/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => false)%>").profile
     end
@@ -511,6 +511,12 @@ class Facebooker::Rails::Publisher::TemplateCanvasUrlsTest < Test::Unit::TestCas
   def test_named_route_does_include_canvas_path_with_canvas_equals_true
     silence_warnings do
       assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=comments_url(:canvas => true)%>").profile
+    end
+  end
+
+  def test_non_canvas_routes_are_callback_url
+    silence_warnings do
+      assert_equal "http://apps.facebook.com/facebook_app_name/comments", TestPublisher.create_render_profile(12451752,@user,"<%=url_for :controller => 'plain_old_rails' %>").profile
     end
   end
 

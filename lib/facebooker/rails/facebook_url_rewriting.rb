@@ -26,7 +26,8 @@ module ::ActionController
 
     def url_for_with_facebooker(*args)
       options = args.first.is_a?(Hash) ? args.first : args.last
-      options[:host] = callback_host if options.delete(:canvas) == false
+      puts args.inspect
+      options[:host] = callback_host if ( options.delete(:canvas) == false && !options[:host] )
       url_for_without_facebooker(*args)
     end
 
